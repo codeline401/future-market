@@ -38,13 +38,3 @@ npm run dev
 ```
 
 L'API sera disponible sur `http://localhost:3000`
-
-## Prochaines étapes
-
-1. ✅ Structure de base créée
-2. ⏳ Modèles de données (Base de données)
-3. ⏳ Authentification
-4. ⏳ Routes API
-5. ⏳ Pages React
-
-ReILlXchAvhRAudi (pass mongo)
