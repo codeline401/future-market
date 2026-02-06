@@ -7,6 +7,7 @@ export default function VendeurDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [newProduct, setNewProduct] = useState({
     nom: "",
     description: "",
@@ -66,11 +67,18 @@ export default function VendeurDashboard() {
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/vendeur/produits", {
+      const productData = {
         ...newProduct,
         prix: parseFloat(newProduct.prix),
         stock: parseInt(newProduct.stock),
-      });
+      };
+
+      if (editingProduct) {
+        await api.put(`/vendeur/produits/${editingProduct._id}`, productData);
+        setEditingProduct(null);
+      } else {
+        await api.post("/vendeur/produits", productData);
+      }
 
       setNewProduct({
         nom: "",
@@ -86,7 +94,7 @@ export default function VendeurDashboard() {
       chargerDonnees();
     } catch (error) {
       console.error("Erreur:", error);
-      alert("Erreur lors de l'ajout du produit");
+      alert("Erreur lors de l'ajout/modification du produit");
     }
   };
 
@@ -100,6 +108,21 @@ export default function VendeurDashboard() {
         alert("Erreur lors de la suppression");
       }
     }
+  };
+
+  const modifierProduit = (produit) => {
+    setNewProduct({
+      nom: produit.nom,
+      description: produit.description,
+      prix: produit.prix.toString(),
+      categorie: produit.categorie,
+      stock: produit.stock.toString(),
+      marque: produit.marque,
+      poids: produit.poids,
+      image: produit.image,
+    });
+    setEditingProduct(produit);
+    setShowAddProduct(true);
   };
 
   if (loading) {
@@ -165,17 +188,32 @@ export default function VendeurDashboard() {
         <div className="lg:col-span-1">
           {/* Bouton ajouter produit */}
           <button
-            onClick={() => setShowAddProduct(!showAddProduct)}
+            onClick={() => {
+              setEditingProduct(null);
+              setNewProduct({
+                nom: "",
+                description: "",
+                prix: "",
+                categorie: "epicerie",
+                stock: "",
+                marque: "",
+                poids: "",
+                image: null,
+              });
+              setShowAddProduct(!showAddProduct);
+            }}
             className="w-full bg-gradient-to-r from-primary to-green-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition font-bold mb-4 text-lg"
           >
             {showAddProduct ? "❌ Annuler" : "➕ Ajouter un produit"}
           </button>
 
-          {/* Formulaire ajout produit */}
+          {/* Formulaire ajout/modification produit */}
           {showAddProduct && (
             <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-lg shadow-lg border-2 border-primary">
               <h2 className="text-2xl font-bold mb-4 text-primary">
-                ➕ Ajouter un nouveau produit
+                {editingProduct
+                  ? "✏️ Modifier le produit"
+                  : "➕ Ajouter un nouveau produit"}
               </h2>
               <form onSubmit={handleAddProduct} className="space-y-4">
                 <input
@@ -216,7 +254,13 @@ export default function VendeurDashboard() {
                   <option value="viandes">Viandes</option>
                   <option value="boissons">Boissons</option>
                   <option value="surgeles">Surgelés</option>
-                  <option value="hygiene">Hygiène</option>
+                  <option value="hygiene">Hygiène & Beauté</option>
+                  <option value="boulangerie">Boulangerie</option>
+                  <option value="confiserie">Confiserie</option>
+                  <option value="bebes">Articles pour Bébés</option>
+                  <option value="nettoyage">Produits de Nettoyage</option>
+                  <option value="electromenager">Électroménager</option>
+                  <option value="autre">Autre</option>
                 </select>
                 <input
                   type="number"
@@ -303,7 +347,7 @@ export default function VendeurDashboard() {
                     type="submit"
                     className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-green-700 transition font-bold text-lg"
                   >
-                    ✅ Ajouter le produit
+                    {editingProduct ? "✏️ Modifier" : "✅ Ajouter"} le produit
                   </button>
                 </div>
               </form>
@@ -354,12 +398,20 @@ export default function VendeurDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-3">
-                        <button
-                          onClick={() => supprimerProduit(produit._id)}
-                          className="text-red-500 hover:text-red-700 font-bold hover:underline"
-                        >
-                          🗑️ Supprimer
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => modifierProduit(produit)}
+                            className="text-blue-500 hover:text-blue-700 font-bold hover:underline"
+                          >
+                            ✏️ Modifier
+                          </button>
+                          <button
+                            onClick={() => supprimerProduit(produit._id)}
+                            className="text-red-500 hover:text-red-700 font-bold hover:underline"
+                          >
+                            🗑️ Supprimer
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

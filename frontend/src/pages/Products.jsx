@@ -1,25 +1,37 @@
-import { useState, useEffect } from "react";
-import api from "../api/axios";
+import { useState, useEffect } from "react"; // importation des hooks pour gérer l'état et les effets de bord
+import { useSearchParams } from "react-router-dom"; // importation du hook pour gérer les paramètres de recherche dans l'URL
+import api from "../api/axios"; // importation de l'instance axios pour faire des requêtes HTTP
 
 export default function Products() {
-  const [produits, setProduits] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [categorie, setCategorie] = useState("");
-  const [recherche, setRecherche] = useState("");
+  const [searchParams] = useSearchParams(); // hook pour accéder aux paramètres de recherche dans l'URL
+  const supermarketId = searchParams.get("supermarket"); // récupération de l'ID du supermarché à partir des paramètres de recherche
+  const [produits, setProduits] = useState([]); // état pour stocker les produits récupérés de l'API
+  const [loading, setLoading] = useState(true); // état pour indiquer si les données sont en cours de chargement
+  const [categorie, setCategorie] = useState(""); // état pour stocker la catégorie sélectionnée pour filtrer les produits
+  const [recherche, setRecherche] = useState(""); // état pour stocker la valeur de la recherche textuelle pour filtrer les produits
 
   useEffect(() => {
-    chargerProduits();
-  }, [categorie, recherche]);
+    chargerProduits(); // fonction pour charger les produits depuis l'API, appelée à chaque changement de catégorie, de recherche ou d'ID de supermarché
+  }, [categorie, recherche, supermarketId]);
 
   const chargerProduits = async () => {
     try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (categorie) params.append("categorie", categorie);
-      if (recherche) params.append("recherche", recherche);
+      setLoading(true); // indique que le chargement commence
+      const params = new URLSearchParams(); // pour construire les paramètres de la requête
+      if (categorie) params.append("categorie", categorie); // ajoute le paramètre de catégorie si il existe
+      if (recherche) params.append("recherche", recherche); // ajoute le paramètre de recherche si il existe
 
-      const response = await api.get("/products?" + params);
-      setProduits(response.data.produits);
+      let url = "/products"; // URL de base pour récupérer les produits
+      if (supermarketId) {
+        // si un ID de supermarché est présent dans les paramètres de recherche
+        url = `/products/supermarket/${supermarketId}`; // modifie l'URL pour récupérer les produits de ce supermarché spécifique
+      }
+
+      const response = await api.get(
+        // effectue la requête GET avec les paramètres
+        url + (params.toString() ? "?" + params : ""), // ajoute les paramètres à l'URL si ils existent
+      );
+      setProduits(response.data.produits || []); // met à jour l'état avec les produits reçus, ou un tableau vide si aucun produit n'est trouvé
     } catch (error) {
       console.error("Erreur:", error);
     } finally {
@@ -29,7 +41,7 @@ export default function Products() {
 
   // Formater le prix avec séparateurs de milliers
   const formatPrice = (price) => {
-    return new Intl.NumberFormat("fr-MG").format(price);
+    return new Intl.NumberFormat("fr-MG").format(price); // utilise l'API Intl pour formater le prix selon les conventions de Madagascar (séparateur de milliers)
   };
 
   const categories = [

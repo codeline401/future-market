@@ -12,9 +12,9 @@ import {
 const router = express.Router();
 
 // Routes publiques
+router.get("/supermarket/:supermarketId", obtenirProduitsParSupermarche);
 router.get("/", obtenirTousLesProduuts);
 router.get("/:id", obtenirProduitParId);
-router.get("/supermarket/:supermarketId", obtenirProduitsParSupermarche);
 
 // Routes protégées (Admin/Vendeur)
 router.post("/", authentifier, verifierAdmin, creerProduit);

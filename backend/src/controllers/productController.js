@@ -1,4 +1,4 @@
-import Product from "../models/Product.js";
+import Product from "../models/Product.js"; //
 import Supermarket from "../models/Supermarket.js";
 
 // GET ALL PRODUCTS
@@ -22,14 +22,14 @@ export const obtenirTousLesProduuts = async (req, res) => {
       ];
     }
 
-    const skip = (page - 1) * limite;
-    const produits = await Product.find(filtre)
-      .populate("supermarket", "nom logo")
-      .limit(limite)
-      .skip(skip)
-      .sort({ createdAt: -1 });
+    const skip = (page - 1) * limite; // calculer le nombre de documents à sauter pour la pagination
+    const produits = await Product.find(filtre) // appliquer les filtres
+      .populate("supermarket", "nom logo") // peupler les informations du supermarché
+      .limit(limite) // limiter le nombre de résultats pour la pagination
+      .skip(skip) // sauter les documents pour la pagination
+      .sort({ createdAt: -1 }); // trier par date de création décroissante
 
-    const total = await Product.countDocuments(filtre);
+    const total = await Product.countDocuments(filtre); // compter le nombre total de documents correspondant aux filtres
 
     res.json({
       produits,
@@ -138,14 +138,27 @@ export const supprimerProduit = async (req, res) => {
 // GET PRODUCTS BY SUPERMARKET
 export const obtenirProduitsParSupermarche = async (req, res) => {
   try {
+    const { supermarketId } = req.params;
+    console.log("Recherche de produits pour le supermarché:", supermarketId);
+
     const produits = await Product.find({
-      supermarket: req.params.supermarketId,
+      supermarket: supermarketId,
     })
       .populate("supermarket", "nom logo")
       .sort({ createdAt: -1 });
 
-    res.json(produits);
+    console.log("Produits trouvés:", produits.length);
+
+    res.json({
+      produits,
+      pagination: {
+        total: produits.length,
+        page: 1,
+        pages: 1,
+      },
+    });
   } catch (error) {
+    console.error("Erreur lors de la recherche des produits:", error);
     res.status(500).json({ message: error.message });
   }
 };
